@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>English Tense Quiz Game</title>
+  <style>
+    body {
+      background-color: #e8f0fe;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .quiz-container {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 30px;
+      background: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .question-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .question {
+      font-size: 1.3em;
+      margin-bottom: 20px;
+    }
+
+    .options {
+      list-style: none;
+      padding: 0;
+    }
+
+    .options li {
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #f4f4f4;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .options li:hover {
+      background: #e0e0e0;
+    }
+
+    .correct {
+      background-color: #4CAF50 !important;
+      color: white;
+    }
+
+    .incorrect {
+      background-color: #f44336 !important;
+      color: white;
+    }
+
+    .feedback, .explanation {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .feedback img {
+      width: 200px;
+      margin-top: 10px;
+    }
+
+    #nextBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .music-toggle {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .music-toggle button {
+      padding: 10px;
+      border: none;
+      background: #6a1b9a;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .score {
+      text-align: right;
+      font-size: 1em;
+      color: #333;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-container">
+  <h1>English Tense Quiz</h1>
+  <div class="question-info">
+    <div id="qNumber">Question 1 of 10</div>
+    <div class="score">Score: <span id="score">0</span></div>
+  </div>
+  <div class="question" id="questionText"></div>
+  <ul class="options" id="optionsList"></ul>
+  <div class="feedback" id="feedback"></div>
+  <div class="explanation" id="explanation"></div>
+  <button id="nextBtn" style="display: none;">Next</button>
+  <div class="music-toggle">
+    <button onclick="toggleMusic()">Toggle Music</button>
+  </div>
+</div>
+
+<audio id="correctSound" src="https://www.soundjay.com/button/sounds/button-4.mp3"></audio>
+<audio id="wrongSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
+<audio id="bgMusic" loop autoplay>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const questions = [
+  {
+    question: "She ___ to the store yesterday.",
+    options: ["goes", "went", "going", "gone"],
+    answer: 1,
+    explanation: "The correct tense is past simple: 'went'."
+  },
+  {
+    question: "They ___ playing football now.",
+    options: ["are", "is", "were", "be"],
+    answer: 0,
+    explanation: "Present continuous tense: 'are playing'."
+  },
+  {
+    question: "I ___ finished my homework.",
+    options: ["have", "has", "had", "having"],
+    answer: 0,
+    explanation: "Present perfect: 'have finished'."
+  },
+  {
+    question: "By next year, she ___ here for five years.",
+    options: ["will live", "lives", "will have lived", "has lived"],
+    answer: 2,
+    explanation: "Future perfect: 'will have lived'."
+  },
+  {
+    question: "We ___ to the cinema last week.",
+    options: ["go", "went", "going", "gone"],
+    answer: 1,
+    explanation: "Past simple: 'went'."
+  },
+  {
+    question: "He ___ to the gym every day.",
+    options: ["go", "goes", "going", "gone"],
+    answer: 1,
+    explanation: "Present simple: 'goes'."
+  },
+  {
+    question: "They ___ studying when I called.",
+    options: ["were", "was", "are", "is"],
+    answer: 0,
+    explanation: "Past continuous: 'were studying'."
+  },
+  {
+    question: "I ___ to the party if I had known.",
+    options: ["would go", "will go", "would have gone", "went"],
+    answer: 2,
+    explanation: "Third conditional: 'would have gone'."
+  },
+  {
+    question: "She ___ a book when I saw her.",
+    options: ["reads", "read", "was reading", "had read"],
+    answer: 2,
+    explanation: "Past continuous: 'was reading'."
+  },
+  {
+    question: "By the time you arrive, I ___ my work.",
+    options: ["finish", "will finish", "will have finished", "finished"],
+    answer: 2,
+    explanation: "Future perfect: 'will have finished'."
+  }
+];
+
+let current = 0;
+let canClick = true;
+let score = 0;
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById("qNumber").textContent = `Question ${current + 1} of ${questions.length}`;
+  document.getElementById("questionText").textContent = q.question;
+  document.getElementById("feedback").innerHTML = '';
+  document.getElementById("explanation").innerHTML = '';
+  document.getElementById("nextBtn").style.display = 'none';
+
+  const optionsList = document.getElementById("optionsList");
+  optionsList.innerHTML = '';
+
+  q.options.forEach((opt, index) => {
+    const li = document.createElement("li");
+    li.textContent = opt;
+    li.onclick = () => {
+      if (!canClick) return;
+      canClick = false;
+      const isCorrect = index === q.answer;
+
+      if (isCorrect) {
+        li.classList.add("correct");
+        document.getElementById("feedback").innerHTML = '✅ Correct!<br><img src="https://media.giphy.com/media/111ebonMs90YLu/giphy.gif">';
+        document.getElementById("correctSound").play();
+        score++;
+      } else {
+        li.classList.add("incorrect");
+        document.getElementById("feedback").innerHTML = '❌ Wrong!<br><img src="https://media.giphy.com/media/3o6Zt6ML6BklcajjsA/giphy.gif">';
+        document.getElementById("wrongSound").play();
+      }
+
+      document.getElementById("score").textContent = score;
+
+      Array.from(optionsList.children).forEach((liElem, idx) => {
+        if (idx === q.answer) liElem.classList.add("correct");
+        liElem.style.pointerEvents = "none";
+      });
+
+      document.getElementById("explanation").textContent = q.explanation;
+      document.getElementById("nextBtn").style.display = "inline-block";
+    };
+    optionsList.appendChild(li);
+  });
+}
+
+document.getElementById("nextBtn").onclick = () => {
+  current++;
+  canClick = true;
+  if (current < questions.length) {
+    renderQuestion();
+  } else {
+    document.querySelector(".quiz-container").innerHTML = `
+      <h1>Quiz Completed!</h1>
+      <p>🎉 You've finished all ${questions.length} questions!</p>
+      <p>Your final score: <strong>${score} / ${questions.length}</strong></p>
+    `;
+  }
+};
+
+function toggleMusic() {
+  const music = document.getElementById("bgMusic");
+  music.paused ? music.play() : music.pause();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
